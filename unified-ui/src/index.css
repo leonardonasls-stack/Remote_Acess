@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #090D16;
+    --bg-window: #0F172A;
+    --bg-card: #1E293B;
+    --bg-input: #090D16;
+    --border-subtle: #334155;
+    --border-control: #64748B;
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+    --primary-bg: #4F46E5;
+    --primary-hover: #4338CA;
+    --pin-highlight: #818CF8;
+    --status-success: #34D399;
+    --status-warning: #FBBF24;
+    --danger-bg: #DC2626;
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    user-select: none;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .font-mono-tabular {
+    font-family: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}

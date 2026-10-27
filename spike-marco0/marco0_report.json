@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-10-26T21:24:24",
+  "system": {
+    "os": "Windows 11 (10.0.26300)",
+    "python": "3.12.13",
+    "processor": "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel",
+    "logical_cores": 6,
+    "physical_cores": 6,
+    "ram_gb": 11.9,
+    "dpi_awareness": "Per-Monitor DPI Aware (SetProcessDpiAwareness=2, status=0)"
+  },
+  "sendinput_validation": {
+    "sent_ok": true,
+    "expected_center": [
+      1280,
+      720
+    ],
+    "actual_cursor_pos": [
+      1280,
+      720
+    ],
+    "pixel_error": [
+      0,
+      0
+    ],
+    "within_tolerance": true,
+    "avg_latency_us": 217.9,
+    "p95_latency_us": 557.1
+  },
+  "webrtc_benchmarks": {
+    "VP8": {
+      "codec": "video/VP8",
+      "raw_resolution": "2560x1440",
+      "encoded_resolution": "1920x1080",
+      "handshake_ms": 10047.27,
+      "frames_sent": 85,
+      "frames_decoded": 83,
+      "effective_fps": 13.76,
+      "capture_avg_ms": 33.95,
+      "capture_p95_ms": 39.8,
+      "convert_avg_ms": 27.9,
+      "convert_p95_ms": 31.76,
+      "pipeline_avg_ms": 61.85,
+      "pipeline_p95_ms": 77.12,
+      "cpu_single_core_equiv_pct": 106.47,
+      "cpu_total_system_pct": 17.74,
+      "logical_cores": 6
+    },
+    "H264": {
+      "codec": "video/H264",
+      "raw_resolution": "2560x1440",
+      "encoded_resolution": "1920x1080",
+      "handshake_ms": 10028.13,
+      "frames_sent": 93,
+      "frames_decoded": 91,
+      "effective_fps": 15.0,
+      "capture_avg_ms": 34.69,
+      "capture_p95_ms": 39.68,
+      "convert_avg_ms": 24.07,
+      "convert_p95_ms": 24.96,
+      "pipeline_avg_ms": 58.76,
+      "pipeline_p95_ms": 63.67,
+      "cpu_single_core_equiv_pct": 112.62,
+      "cpu_total_system_pct": 18.77,
+      "logical_cores": 6
+    }
+  }
+}

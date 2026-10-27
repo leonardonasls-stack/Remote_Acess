@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RemoteAccess — Interface Minimalista Multi-Abas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen p-8 select-none">
+
+  <!-- JANELA PRINCIPAL ENXUTA -->
+  <div class="max-w-4xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+
+    <!-- BARRA SUPERIOR SIMPLES (MÚLTIPLAS ABAS + BOTÃO [+] + STATUS) -->
+    <header class="bg-slate-950 border-b border-slate-800 px-5 pt-2.5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-1.5 overflow-x-auto">
+        <!-- Aba Início Fixa -->
+        <button
+          onclick="switchTab('home')"
+          id="tab-btn-home"
+          class="px-4 py-2 rounded-t-lg text-xs font-semibold border border-b-0 border-slate-800 bg-slate-900 text-white flex items-center gap-2 shrink-0"
+        >
+          <span>Início</span>
+        </button>
+
+        <!-- Container Dinâmico de Abas de Sessão Remota -->
+        <div id="session-tabs-container" class="flex items-center gap-1.5"></div>
+
+        <!-- Botão (+) para abrir novo acesso remoto simultâneo -->
+        <button
+          onclick="openNewConnectionTab()"
+          title="Nova conexão remota (+)"
+          class="w-7 h-7 mb-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-bold flex items-center justify-center shrink-0 transition"
+        >
+          +
+        </button>
+      </div>
+
+      <div class="flex items-center gap-4 pb-2 shrink-0">
+        <button
+          onclick="openConsentModal()"
+          class="text-xs text-slate-400 hover:text-white underline cursor-pointer"
+        >
+          Testar pedido recebido
+        </button>
+        <div class="flex items-center gap-1.5 text-xs text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Pronto</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- BANNER SIMPLES DE SESSÃO ATIVA -->
+    <div id="incoming-session-banner" class="hidden bg-red-500/15 border-b border-red-500/30 px-6 py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-xs">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span class="font-semibold text-red-200">Acesso remoto em andamento neste computador</span>
+      </div>
+      <button
+        onclick="terminateIncomingSession()"
+        class="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500"
+      >
+        Desconectar
+      </button>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TELA INICIAL MINIMALISTA                                            -->
+    <!-- =================================================================== -->
+    <main id="view-home" class="p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+
+      <!-- LADO ESQUERDO (5 cols): ESTE COMPUTADOR -->
+      <section class="md:col-span-5 bg-slate-950/60 border border-slate-800 rounded-2xl p-6 space-y-6">
+        <div>
+          <h2 class="text-sm font-bold text-white">Este Computador</h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Passe estes dados para quem for acessar você
+          </p>
+        </div>
+
+        <!-- Seu ID -->
+        <div class="space-y-1.5">
+          <span class="text-xs text-slate-400">Seu ID</span>
+          <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+            <span class="text-2xl font-bold font-mono tracking-wider text-white">914 205 881</span>
+            <button
+              onclick="copyHostId()"
+              id="btn-copy-id"
+              class="text-xs font-medium px-2.5 py-1 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+
+        <!-- PIN Temporário -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400">PIN Temporário</span>
+            <span id="pin-timer" class="text-xs font-mono text-slate-500">04:52</span>
+          </div>
+          <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+            <span id="my-temp-pin" class="text-xl font-bold font-mono tracking-wider text-indigo-400">739 201</span>
+            <button
+              onclick="rotatePin()"
+              class="text-xs font-medium px-2.5 py-1 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Link discreto para Senha Fixa -->
+        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+          <span id="unattended-badge" class="text-xs text-emerald-400">
+            ● Senha fixa ativa
+          </span>
+          <button
+            onclick="openPasswordModal()"
+            class="text-xs font-semibold text-indigo-400 hover:underline"
+          >
+            Configurar senha fixa
+          </button>
+        </div>
+      </section>
+
+      <!-- LADO DIREITO (7 cols): ACESSAR OUTRO COMPUTADOR -->
+      <section class="md:col-span-7 space-y-6">
+        <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-6 space-y-4">
+          <div>
+            <h2 class="text-sm font-bold text-white">Controlar Outro Computador</h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Digite o ID e o PIN (ou senha fixa) do computador remoto
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-7">
+              <input
+                id="input-remote-id"
+                type="text"
+                value="482 910 384"
+                placeholder="ID (ex: 482 910 384)"
+                maxlength="11"
+                oninput="formatHostIdInput(this)"
+                class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-base font-mono font-bold tracking-wider text-white focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+            <div class="sm:col-span-5">
+              <input
+                id="input-remote-cred"
+                type="password"
+                value="123456"
+                placeholder="PIN ou Senha"
+                class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-base font-mono text-white focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <button
+            onclick="connectFromForm()"
+            id="btn-connect"
+            class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition"
+          >
+            Conectar
+          </button>
+        </div>
+
+        <!-- Recentes Simples -->
+        <div class="space-y-2.5">
+          <h3 class="text-xs font-semibold text-slate-400 px-1">Acessados recentemente</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onclick="openOrCreateSession('482 910 384', 'Servidor Loja')"
+              class="text-left bg-slate-950/60 hover:border-indigo-500 border border-slate-800 rounded-xl p-3.5 transition flex items-center justify-between"
+            >
+              <div>
+                <div class="text-xs font-bold text-white">Servidor Loja</div>
+                <div class="text-xs font-mono text-slate-400">482 910 384</div>
+              </div>
+              <span class="text-xs text-slate-500">→</span>
+            </button>
+
+            <button
+              onclick="openOrCreateSession('109 442 710', 'PC Financeiro')"
+              class="text-left bg-slate-950/60 hover:border-indigo-500 border border-slate-800 rounded-xl p-3.5 transition flex items-center justify-between"
+            >
+              <div>
+                <div class="text-xs font-bold text-white">PC Financeiro</div>
+                <div class="text-xs font-mono text-slate-400">109 442 710</div>
+              </div>
+              <span class="text-xs text-slate-500">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- ABA DE SESSÃO REMOTA (SUPORTA MÚLTIPLAS SESSÕES SIMULTÂNEAS)        -->
+    <!-- =================================================================== -->
+    <main id="view-session" class="hidden bg-black p-3 space-y-2.5">
+      <div class="mx-auto max-w-3xl bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="font-semibold font-mono text-white" id="active-session-title">482 910 384 (Servidor Loja)</span>
+          <span class="text-slate-400">• 12 ms</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            onclick="openRemoteUnattendedSetupModal()"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-medium hover:bg-slate-700"
+          >
+            🔑 Criar Senha Fixa
+          </button>
+
+          <button
+            onclick="toggleControlMode()"
+            id="btn-mode-toggle"
+            class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-medium"
+          >
+            Controle Ativo
+          </button>
+
+          <button
+            onclick="closeActiveSession()"
+            class="px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500"
+          >
+            Sair
+          </button>
+        </div>
+      </div>
+
+      <div class="mx-auto max-w-4xl aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex flex-col justify-between p-6 text-white">
+        <div class="flex items-start justify-between">
+          <div class="flex gap-4">
+            <div class="text-center text-xs space-y-1 p-2 rounded hover:bg-white/10 cursor-pointer">
+              <div class="text-xl">🗂️</div>
+              <div>Arquivos</div>
+            </div>
+            <div class="text-center text-xs space-y-1 p-2 rounded hover:bg-white/10 cursor-pointer">
+              <div class="text-xl">📊</div>
+              <div>Sistema</div>
+            </div>
+          </div>
+
+          <div class="bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300">
+            Dica: Clique no botão <strong>[+]</strong> no topo para abrir outro acesso remoto simultâneo!
+          </div>
+        </div>
+
+        <div class="bg-slate-950/80 border border-slate-800 rounded-lg px-4 py-2 flex items-center justify-between text-xs text-slate-300">
+          <span id="remote-desktop-footer">❖ Área de Trabalho Remota — 482 910 384</span>
+          <span id="session-toast" class="text-emerald-400">Conectado</span>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- MODAL 1: PEDIDO DE CONEXÃO RECEBIDO -->
+  <div id="modal-consent" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+      <h3 class="text-sm font-bold text-white">Permitir acesso remoto?</h3>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Um operador validou o seu PIN e solicita permissão para visualizar e controlar sua tela.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="respondConsent(false)" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold">Recusar</button>
+        <button onclick="respondConsent(true)" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold">Aceitar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: CONFIGURAR SENHA FIXA LOCAL -->
+  <div id="modal-password" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+      <h3 class="text-sm font-bold text-white">Senha de Acesso Fixo</h3>
+      <p class="text-xs text-slate-400">
+        Permite conectar a este computador a qualquer momento sem precisar do PIN temporário.
+      </p>
+      <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+        <input type="checkbox" id="toggle-unattended" checked class="accent-indigo-600" />
+        <span>Habilitar senha fixa neste computador</span>
+      </label>
+      <input
+        id="input-new-unattended-pwd"
+        type="password"
+        placeholder="Nova senha (mín. 8 caracteres)"
+        class="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white"
+      />
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closePasswordModal()" class="px-3.5 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium">Cancelar</button>
+        <button onclick="saveUnattendedPassword()" class="px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: TÉCNICO REMOTO CRIANDO SENHA FIXA PELO HUD -->
+  <div id="modal-remote-unattended" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+      <h3 class="text-sm font-bold text-white">Criar Senha Fixa neste Host</h3>
+      <p class="text-xs text-slate-400">
+        Digite a senha para acessar este computador nas próximas vezes. O cliente precisará confirmar na tela dele.
+      </p>
+      <input
+        id="input-remote-unattended-pwd"
+        type="password"
+        value="Suporte@2026"
+        placeholder="Nova senha (mín. 8 caracteres)"
+        class="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white"
+      />
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeRemoteUnattendedSetupModal()" class="px-3.5 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium">Cancelar</button>
+        <button onclick="sendRemoteUnattendedRequest()" class="px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold">Solicitar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: CONFIRMAÇÃO FÍSICA DO CLIENTE PARA SENHA FIXA -->
+  <div id="modal-host-physical-approval" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+      <h3 class="text-sm font-bold text-white">Permitir Acesso Permanente?</h3>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        O técnico conectado deseja cadastrar uma senha fixa para acessar este computador futuramente sem precisar de PIN.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="respondPhysicalApproval(false)" class="px-3.5 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold">Negar</button>
+        <button onclick="respondPhysicalApproval(true)" class="px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold">Permitir (Clique Local)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let sessions = [
+      { id: '482 910 384', label: 'Servidor Loja', mode: 'control' }
+    ];
+    let activeTab = 'home';
+
+    function renderTabs() {
+      const container = document.getElementById('session-tabs-container');
+      const btnHome = document.getElementById('tab-btn-home');
+
+      if (activeTab === 'home') {
+        btnHome.className = "px-4 py-2 rounded-t-lg text-xs font-semibold border border-b-0 border-slate-800 bg-slate-900 text-white flex items-center gap-2 shrink-0";
+      } else {
+        btnHome.className = "px-4 py-2 rounded-t-lg text-xs font-medium text-slate-400 hover:text-white flex items-center gap-2 shrink-0";
+      }
+
+      container.innerHTML = sessions.map(s => {
+        const isActive = activeTab === s.id;
+        const cls = isActive
+          ? "px-3.5 py-2 rounded-t-lg text-xs font-semibold border border-b-0 border-slate-800 bg-slate-900 text-white flex items-center gap-2 shrink-0"
+          : "px-3.5 py-2 rounded-t-lg text-xs font-medium text-slate-400 hover:text-white flex items-center gap-2 shrink-0";
+        return `
+          <button onclick="switchTab('${s.id}')" class="${cls}">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>${s.id}</span>
+            <span onclick="closeSessionById(event, '${s.id}')" class="ml-1 opacity-60 hover:opacity-100">✕</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      const homeView = document.getElementById('view-home');
+      const sessionView = document.getElementById('view-session');
+
+      if (tabId === 'home') {
+        homeView.classList.remove('hidden');
+        sessionView.classList.add('hidden');
+      } else {
+        const sess = sessions.find(s => s.id === tabId);
+        if (sess) {
+          document.getElementById('active-session-title').textContent =
+            sess.label ? `${sess.id} (${sess.label})` : sess.id;
+          document.getElementById('remote-desktop-footer').textContent =
+            `❖ Área de Trabalho Remota — ${sess.id}`;
+          document.getElementById('session-toast').textContent = "Conectado";
+        }
+        homeView.classList.add('hidden');
+        sessionView.classList.remove('hidden');
+      }
+      renderTabs();
+    }
+
+    function openNewConnectionTab() {
+      switchTab('home');
+      const input = document.getElementById('input-remote-id');
+      input.focus();
+      input.select();
+    }
+
+    function openOrCreateSession(id, label = '') {
+      const existing = sessions.find(s => s.id === id);
+      if (!existing) {
+        sessions.push({ id, label, mode: 'control' });
+      }
+      switchTab(id);
+    }
+
+    function connectFromForm() {
+      const id = document.getElementById('input-remote-id').value.trim();
+      if (!id) return;
+      const btn = document.getElementById('btn-connect');
+      btn.textContent = "Conectando...";
+      setTimeout(() => {
+        btn.textContent = "Conectar";
+        openOrCreateSession(id, 'Remoto');
+      }, 300);
+    }
+
+    function closeSessionById(e, id) {
+      if (e) e.stopPropagation();
+      sessions = sessions.filter(s => s.id !== id);
+      if (activeTab === id) {
+        activeTab = sessions.length > 0 ? sessions[sessions.length - 1].id : 'home';
+      }
+      switchTab(activeTab);
+    }
+
+    function closeActiveSession() {
+      if (activeTab !== 'home') {
+        closeSessionById(null, activeTab);
+      }
+    }
+
+    let pinSeconds = 292;
+    setInterval(() => {
+      pinSeconds = pinSeconds > 0 ? pinSeconds - 1 : 300;
+      const m = String(Math.floor(pinSeconds / 60)).padStart(2, '0');
+      const s = String(pinSeconds % 60).padStart(2, '0');
+      const el = document.getElementById('pin-timer');
+      if (el) el.textContent = `${m}:${s}`;
+    }, 1000);
+
+    function copyHostId() {
+      const btn = document.getElementById('btn-copy-id');
+      btn.textContent = "Copiado!";
+      setTimeout(() => { btn.textContent = "Copiar"; }, 1500);
+    }
+
+    function rotatePin() {
+      const p1 = Math.floor(100 + Math.random() * 900);
+      const p2 = Math.floor(100 + Math.random() * 900);
+      document.getElementById('my-temp-pin').textContent = `${p1} ${p2}`;
+      pinSeconds = 300;
+    }
+
+    function formatHostIdInput(input) {
+      const digits = input.value.replace(/\D/g, '').slice(0, 9);
+      const parts = digits.match(/.{1,3}/g) || [];
+      input.value = parts.join(' ');
+    }
+
+    function openConsentModal() {
+      document.getElementById('modal-consent').classList.remove('hidden');
+    }
+
+    function respondConsent(approved) {
+      document.getElementById('modal-consent').classList.add('hidden');
+      const banner = document.getElementById('incoming-session-banner');
+      if (approved) {
+        banner.classList.remove('hidden');
+        rotatePin();
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function terminateIncomingSession() {
+      document.getElementById('incoming-session-banner').classList.add('hidden');
+    }
+
+    function openPasswordModal() {
+      document.getElementById('modal-password').classList.remove('hidden');
+    }
+
+    function closePasswordModal() {
+      document.getElementById('modal-password').classList.add('hidden');
+    }
+
+    function saveUnattendedPassword() {
+      const enabled = document.getElementById('toggle-unattended').checked;
+      const badge = document.getElementById('unattended-badge');
+      badge.textContent = enabled ? "● Senha fixa ativa" : "○ Senha fixa desativada";
+      badge.className = enabled ? "text-xs text-emerald-400" : "text-xs text-slate-500";
+      closePasswordModal();
+    }
+
+    function openRemoteUnattendedSetupModal() {
+      document.getElementById('modal-remote-unattended').classList.remove('hidden');
+    }
+
+    function closeRemoteUnattendedSetupModal() {
+      document.getElementById('modal-remote-unattended').classList.add('hidden');
+    }
+
+    function sendRemoteUnattendedRequest() {
+      closeRemoteUnattendedSetupModal();
+      document.getElementById('modal-host-physical-approval').classList.remove('hidden');
+    }
+
+    function respondPhysicalApproval(approved) {
+      document.getElementById('modal-host-physical-approval').classList.add('hidden');
+      const toast = document.getElementById('session-toast');
+      toast.textContent = approved ? "✓ Senha fixa ativada no Host" : "Pedido recusado pelo Host";
+    }
+
+    let isControlActive = true;
+    function toggleControlMode() {
+      isControlActive = !isControlActive;
+      const btn = document.getElementById('btn-mode-toggle');
+      btn.textContent = isControlActive ? "Controle Ativo" : "Apenas Visualização";
+    }
+
+    renderTabs();
+  </script>
+</body>
+</html>
