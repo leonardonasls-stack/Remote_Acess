@@ -210,7 +210,9 @@ class DesktopApplication:
         backend_thread.start()
 
         # Determinar URL para WebView (dev server do Vite ou build estático)
-        ui_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "unified-ui", "dist", "index.html"))
+        ui_dist = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "unified-ui", "dist", "index.html")
+        )
         ui_url = f"file:///{ui_dist}" if os.path.isfile(ui_dist) else "http://localhost:5173"
 
         logger.info(f"Iniciando janela nativa PyWebView apontando para: {ui_url}")
