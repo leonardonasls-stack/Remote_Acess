@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec.bak
+*.log
+
+# Executables
+bin/*.exe
+
+# Node / Vite
+node_modules/
+dist/
+.DS_Store

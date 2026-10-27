@@ -209,10 +209,14 @@ class DesktopApplication:
         backend_thread = threading.Thread(target=self.run_backend_services, daemon=True)
         backend_thread.start()
 
-        # Determinar URL para WebView (dev server do Vite ou build estático)
-        ui_dist = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "unified-ui", "dist", "index.html")
-        )
+        # Determinar caminho dos arquivos estáticos do frontend (suporta PyInstaller e Dev)
+        if hasattr(sys, "_MEIPASS"):
+            ui_dist = os.path.join(sys._MEIPASS, "frontend_dist", "index.html")
+        else:
+            ui_dist = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "unified-ui", "dist", "index.html")
+            )
+
         ui_url = f"file:///{ui_dist}" if os.path.isfile(ui_dist) else "http://localhost:5173"
 
         logger.info(f"Iniciando janela nativa PyWebView apontando para: {ui_url}")

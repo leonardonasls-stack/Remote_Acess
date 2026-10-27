@@ -1,0 +1,13 @@
+{
+  "name": "remote-access-monorepo",
+  "version": "2.2.0",
+  "private": true,
+  "scripts": {
+    "dev:ui": "npm --prefix frontend/unified-ui run dev",
+    "build:ui": "npm --prefix frontend/unified-ui run build",
+    "dev:signaling": ".\\.venv\\Scripts\\python.exe -m uvicorn backend.signaling-server.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev:engine": ".\\.venv\\Scripts\\python.exe backend/desktop-engine/main.py",
+    "test:backend": ".\\.venv\\Scripts\\pytest backend",
+    "dev": "npm run dev:ui"
+  }
+}

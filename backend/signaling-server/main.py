@@ -269,3 +269,8 @@ async def websocket_client_endpoint(websocket: WebSocket):
                     ).model_dump_json())
                 except Exception:
                     pass
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
