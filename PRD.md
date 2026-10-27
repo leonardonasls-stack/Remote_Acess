@@ -137,10 +137,62 @@ Construir uma ferramenta moderna de acesso e controle remoto de baixa latência 
 
 ---
 
-## 5. Roadmap de Entrega
+---
 
-- **Marco 0 — Spike Técnico de Risco:** Validar performance de captura (`mss`) + codificação (`aiortc`) em 1080p@30fps e injeção Win32 `SendInput` com DPI Awareness (documentado no [TRD.md](./TRD.md)).
-- **Marco 1 — Signaling Server, Identidade Fixa e Motor Unificado:** Servidor FastAPI (`signaling-server`), persistência de `Host ID` + PIN/Senha Fixa e API local do agente unificado.
-- **Marco 2 — Interface Unificada Minimalista (Multi-Abas `+`) + Streaming de Vídeo:** Dashboard enxuto, suporte a múltiplas abas simultâneas de sessão remota e streaming de tela a 30 FPS.
-- **Marco 3 — Controle Remoto Completo (`Win32 SendInput`):** Mouse, teclado por scancode, cursor remoto, suporte a DPI/letterbox e liberação automática de teclas presas.
-- **Marco 4 — Provisionamento Remoto de Senha, Consentimento Físico, Kill Switch e Resiliência:** Fluxo de criar Senha Fixa pelo HUD com trava anti-auto-clique no Host, atalho `Ctrl+Alt+Shift+Q` e reconexão automática.
+## 5. Estrutura do Monorepo e Separação de Responsabilidades
+
+O projeto está organizado em um Monorepo com separação clara e isolada entre as camadas de **Backend** e **Frontend**:
+
+```text
+Remote Acess/
+├── backend/
+│   ├── signaling-server/         # Módulo 2: Servidor Central de Sinalização (FastAPI + WSS + STUN/TURN)
+│   │   ├── main.py               # Endpoints WebSocket /ws/host e /ws/client (bloqueio 1:1 e roteamento)
+│   │   ├── session_manager.py    # Gerenciamento de sessões, salas e rate limiter anti-força-bruta
+│   │   ├── schemas.py            # Contratos de dados Pydantic v2 para validação estrita
+│   │   ├── turn_credentials.py   # Emissão de credenciais efêmeras coturn via HMAC-SHA1
+│   │   ├── requirements.txt
+│   │   └── tests/
+│   │       └── test_signaling.py # Testes de handshake, persistência de ID e rate limit
+│   └── desktop-engine/           # Módulo 1: Motor Local do Agente Host em Python
+│       ├── main.py               # Entrypoint: Per-Monitor DPI Awareness + Local Bridge + PyWebView
+│       ├── host_config.py        # Identidade fixa (%APPDATA%), PIN de uso único e hash PBKDF2
+│       ├── host_rtc.py           # Conexão P2P WebRTC (aiortc) e handlers dos DataChannels
+│       ├── screen_track.py       # Captura de tela otimizada mss + cv2 resize (YUV420p) a 30 FPS
+│       ├── input_controller.py   # Injeção Win32 SendInput com Stuck-Keys Guard (release_all)
+│       ├── physical_guard.py     # Hooks Win32 WH_MOUSE_LL e WH_KEYBOARD_LL (Anti-Auto-Clique + Kill Switch)
+│       ├── scancode_map.py       # Mapeamento W3C para Hardware Scancode Set 1 (ABNT2 e US)
+│       ├── local_bridge.py       # Servidor IPC local seguro em 127.0.0.1:8765
+│       ├── requirements.txt
+│       └── tests/
+│           └── test_engine.py    # Testes unitários de injeção, scancodes e guarda físico
+│
+├── frontend/
+│   ├── unified-ui/               # Módulo 3: Aplicação Web e Desktop em React 19 + TypeScript + Vite + Tailwind CSS
+│   │   ├── src/
+│   │   │   ├── App.tsx           # Gerenciador de abas simultâneas e tela inicial (Split View)
+│   │   │   ├── components/       # TopTabBar, ThisDeskCard, RemoteConnectCard, SessionViewport e modais
+│   │   │   ├── types/protocol.ts # Contratos TypeScript do protocolo de dados e DataChannels
+│   │   │   └── utils/            # Cálculo de coordenadas, letterbox/pillarbox e normalização de mouse
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   └── ui-prototype.html         # Protótipo funcional de alta definição de referência estética WCAG 2
+│
+├── spike-marco0/                 # Spike Técnico de Risco (validação empírica de FPS, latência e SendInput)
+│   ├── benchmark_pipeline.py
+│   └── marco0_report.json
+├── PRD.md
+├── TRD.md
+├── UI_DESIGN_SYSTEM.md
+└── IMPLEMENTATION_PLAN.md
+```
+
+---
+
+## 6. Roadmap de Entrega
+
+- **Marco 0 — Spike Técnico de Risco:** Validar performance de captura (`mss` + `cv2`) + codificação (`aiortc`) em 1080p@30fps e injeção Win32 `SendInput` com DPI Awareness (Concluído: `within_tolerance: true`, erro `0px`).
+- **Marco 1 — Backend Signaling Server, Identidade Fixa e Motor Unificado:** Servidor FastAPI (`backend/signaling-server`), persistência de `Host ID` + PIN/Senha Fixa (`backend/desktop-engine/host_config.py`) e API local do agente unificado.
+- **Marco 2 — Frontend Unificado Minimalista (Multi-Abas `+`) + Streaming de Vídeo:** Dashboard enxuto em `frontend/unified-ui`, suporte a múltiplas abas simultâneas de sessão remota e streaming de tela a 30 FPS.
+- **Marco 3 — Controle Remoto Completo (`Win32 SendInput`):** Mouse, teclado por scancode, cursor remoto, suporte a DPI/letterbox e liberação automática de teclas presas (`Stuck-Keys Guard`).
+- **Marco 4 — Provisionamento Remoto de Senha, Consentimento Físico, Kill Switch e Resiliência:** Fluxo de criar Senha Fixa pelo HUD com trava anti-auto-clique no Host (`backend/desktop-engine/physical_guard.py`), atalho `Ctrl+Alt+Shift+Q` e reconexão automática.
